@@ -31,8 +31,8 @@ def unzip_gt3x_file(f, save_location = None, delete_source_file = False):
 	# if save location is not given, then save in the same folder 
 	# as where the file resides with the folder name equal the name of the file
 	if save_location is None:
-		save_folder = tmp.TemporaryDirectory()
-		save_folder = save_folder.name		
+		save_location = tmp.TemporaryDirectory()
+		save_location = save_location.name		
 	
 	# if folder does not exist, create it
 	if not os.path.exists(save_location):
