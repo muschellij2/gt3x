@@ -393,6 +393,11 @@ def read_gt3x(f, save_location = None, create_time = True):
 	# get meta data from info.txt file
 	meta_data = extract_info(info_txt)
 
+	# use old format
+	if 'Acceleration_Scale' not in meta_data :
+		meta_data['Acceleration_Scale'] = 341
+
+
 	# read raw data from binary data
 	log_data, time_data = extract_log(log_bin = log_bin, acceleration_scale = float(meta_data['Acceleration_Scale']), sample_rate = int(meta_data['Sample_Rate']), use_scaling = False)
 
