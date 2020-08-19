@@ -1,1 +1,1 @@
-import gt3x_functions
+from gt3x_functions import *
