@@ -384,7 +384,7 @@ def create_time_array(time_data, hz = 100):
 	return time_data
 
 
-def read_gt3x(f, save_location = None):
+def read_gt3x(f, save_location = None, create_time = True):
 
 	# unzip .gt3x file and get the file location of the binary log.bin (which contains the raw data) and the info.txt which contains the meta-data
 	log_bin, info_txt = unzip_gt3x_file(f = f, save_location = save_location, delete_source_file = False)
@@ -398,5 +398,8 @@ def read_gt3x(f, save_location = None):
 	actigraph_acc = rescale_log_data(log_data = log_data, acceleration_scale = meta_data['Acceleration_Scale'])
 
 	# convert time data to correct time series array with correct miliseconds values
-	actigraph_time = create_time_array(time_data, hz = int(meta_data['Sample_Rate']))
+	if (create_time):
+		actigraph_time = create_time_array(time_data, hz = int(meta_data['Sample_Rate']))
+	else:
+		actigraph_time = time_data;
 	return actigraph_acc, actigraph_time, meta_data
