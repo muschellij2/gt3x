@@ -398,7 +398,7 @@ def read_gt3x(f, save_location = None, create_time = True):
 	if 'Acceleration_Scale' not in meta_data :
 		meta_data['Acceleration_Scale'] = 341
 		n_samples = (float(meta_data['Stop_Date']) - float(meta_data['Start_Date']))
-		n_samples = int( n_samples/float(pow(10, 7)) )
+		n_samples = int( n_samples/float(pow(10, 6)) )
 
 	if not os.path.exists(log_bin):
 		log_bin = os.path.join(os.path.dirname(log_bin), "activity.bin")
