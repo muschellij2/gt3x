@@ -387,7 +387,7 @@ def create_time_array(time_data, hz = 100):
 def read_gt3x(f, save_location = None):
 
 	# unzip .gt3x file and get the file location of the binary log.bin (which contains the raw data) and the info.txt which contains the meta-data
-	log_bin, info_txt = unzip_gt3x_file(f = file, save_location = save_location, delete_source_file = False)
+	log_bin, info_txt = unzip_gt3x_file(f = f, save_location = save_location, delete_source_file = False)
 
 	# get meta data from info.txt file
 	meta_data = extract_info(info_txt)
