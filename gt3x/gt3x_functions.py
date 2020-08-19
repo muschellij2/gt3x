@@ -393,6 +393,7 @@ def read_gt3x(f, save_location = None, create_time = True):
 	# get meta data from info.txt file
 	meta_data = extract_info(info_txt)
 
+	old_format = False
 	# use old format
 	if 'Acceleration_Scale' not in meta_data :
 		meta_data['Acceleration_Scale'] = 341
@@ -401,16 +402,20 @@ def read_gt3x(f, save_location = None, create_time = True):
 
 	if not os.path.exists(log_bin):
 		log_bin = os.path.join(os.path.dirname(log_bin), "activity.bin")
-
-
-	# read raw data from binary data
-	log_data, time_data = extract_log(log_bin = log_bin, acceleration_scale = float(meta_data['Acceleration_Scale']), sample_rate = int(meta_data['Sample_Rate']), use_scaling = False)
+		log_data, time_data = extract_activity(log_bin = log_bin, n_samples = n_samples, acceleration_scale = float(meta_data['Acceleration_Scale']), sample_rate = int(meta_data['Sample_Rate']), use_scaling = False)
+		old_format=True
+	else :
+		# read raw data from binary data
+		log_data, time_data = extract_log(log_bin = log_bin, acceleration_scale = float(meta_data['Acceleration_Scale']), sample_rate = int(meta_data['Sample_Rate']), use_scaling = False)
 
 	actigraph_acc = rescale_log_data(log_data = log_data, acceleration_scale = meta_data['Acceleration_Scale'])
 
 	# convert time data to correct time series array with correct miliseconds values
 	if (create_time):
-		actigraph_time = create_time_array(time_data, hz = int(meta_data['Sample_Rate']))
+		if not old_format:
+			actigraph_time = create_time_array(time_data, hz = int(meta_data['Sample_Rate']))
+		else:
+			actigraph_time = np.asarray(time_data, dtype='datetime64[s]') + time_data
 	else:
 		actigraph_time = time_data;
 	return actigraph_acc, actigraph_time, meta_data
@@ -428,7 +433,8 @@ def extract_activity(log_bin, n_samples, acceleration_scale, sample_rate, use_sc
 	COUNTER = 0
 	# number of axes, the GTX3 is tri-axial, so we hard code it here.
 	NUM_AXES = 3
-	SIZE = int(n_samples * NUM_AXES)
+	# SIZE = int(n_samples * NUM_AXES)
+	SIZE = os.path.getsize(log_bin)
 
 	# empty dictionary where we can store the 12bit to signed integer values; this saves calculating them all the time
 	bit12_to_int = {}
@@ -447,15 +453,17 @@ def extract_activity(log_bin, n_samples, acceleration_scale, sample_rate, use_sc
 		acc_data_type = np.float
 
 	# create empty array for the acceleration data
-	log_data = np.empty((sample_rate * SIZE , NUM_AXES), dtype=acc_data_type)
+	log_data = np.empty((n_samples * NUM_AXES, NUM_AXES), dtype=acc_data_type)
+
 	# empty numpy array to store the timestamps
-	time_data = np.empty((SIZE,1), dtype=np.uint32)
+	time_data = np.empty((n_samples,1), dtype=np.uint32)
 
 	# open the log.bin file in binary mode
 	with open(log_bin, mode='rb') as file:
 		try:
 			# read the bytes as bits as a large string
-			payload_bits = Bits(bytes = file.read(SIZE)).bin
+			payload_bits = Bits(bytes = file.read(SIZE*2)).bin
+			# logging.error(len(payload_bits))
 
 			# extract 12 bits as 1 acceleration value and add them to a list
 			bits_list = []
@@ -479,21 +487,23 @@ def extract_activity(log_bin, n_samples, acceleration_scale, sample_rate, use_sc
 
 			payload_bits_array = np.array(bits_list)
 			sz = payload_bits_array.size
-			logging.error(sz)
 			# convert list to numpy array and perform scaling if it was set to True: no scaling allows for a smaller numpy array because we can use int8 and not need the float
 			if use_scaling:
-				payload_bits_array = payload_bits_array.reshape(n_samples,NUM_AXES) * SCALING
+				payload_bits_array = payload_bits_array.reshape(int(sz/NUM_AXES),NUM_AXES) * SCALING
 			else:
-				payload_bits_array = payload_bits_array.reshape(n_samples,NUM_AXES)
+				payload_bits_array = payload_bits_array.reshape(int(sz/NUM_AXES),NUM_AXES)
 
 			# add payload bits array to overall numpy array
 			# np_start = COUNTER * sample_rate
 			# np_end = np_start + sample_rate
 			np_start = 0
 			# np_end = sample_rate * SIZE
-			np_end = n_samples
-			log_data[np_start:np_end] = payload_bits_array
-			
+			np_end = int(sz/NUM_AXES)
+
+			log_data[np_start:np_end, :] = payload_bits_array	
+			time_data = np.arange(0, n_samples, 1/sample_rate)
+			time_data = time_data.reshape(time_data.size,1)
+			# time_data[0:n_samples] = np.arange(0, n_samples * sample_rate, sample_rate)
 
 		except Exception as e:
 			logging.error('Unpacking GTX3 exception: {}'.format(e))
@@ -501,4 +511,4 @@ def extract_activity(log_bin, n_samples, acceleration_scale, sample_rate, use_sc
 
 			# return acceleration data + time data
 	
-	return log_data
+	return log_data, time_data
