@@ -188,6 +188,8 @@ def extract_log(log_bin, acceleration_scale, sample_rate, use_scaling = False):
 				6	2	Size	The size of the payload is given in bytes as an little-endian unsigned integer.	Header
 				"""
 				_, payload_type, timestamp, size  = unpack("<cbLH", file.read(8))
+				if payload_type == 0:
+					break
 
 				# acceleration type 0 is the activity data, we skip all other data but can easily be read with an if statement
 				if payload_type == 0:
@@ -397,6 +399,9 @@ def read_gt3x(f, save_location = None, create_time = True):
 	if 'Acceleration_Scale' not in meta_data :
 		meta_data['Acceleration_Scale'] = 341
 
+	if not os.path.exists(log_bin):
+		log_bin = os.path.join(os.path.dirname(log_bin), "activity.bin")
+
 
 	# read raw data from binary data
 	log_data, time_data = extract_log(log_bin = log_bin, acceleration_scale = float(meta_data['Acceleration_Scale']), sample_rate = int(meta_data['Sample_Rate']), use_scaling = False)
@@ -409,3 +414,87 @@ def read_gt3x(f, save_location = None, create_time = True):
 	else:
 		actigraph_time = time_data;
 	return actigraph_acc, actigraph_time, meta_data
+
+
+def extract_activity(log_bin, acceleration_scale, sample_rate, use_scaling = False):
+
+	# define the size of the payload. This is necessary because we need to define the size of the numpy array before we populate it. -1 because we start counting from 0
+	# SIZE = count_payload_size(log_bin) - 1
+	SIZE = count_payload_size(log_bin)
+	# raw data values are stored in ints, to obtain values in G, we need to scale them by a factor found in the acceleration_scale parameter within the info.txt file. For example, 256.0
+	SCALING = 1 / acceleration_scale
+	# counter so we can keep track of how many acceleration values we have processed
+	COUNTER = 0
+	# number of axes, the GTX3 is tri-axial, so we hard code it here.
+	NUM_AXES = 3
+
+	# empty dictionary where we can store the 12bit to signed integer values; this saves calculating them all the time
+	bit12_to_int = {}
+
+	"""
+		create empty numpy array where we can store the acceleration data to: dimensions (sample_rate x SIZE,number of axis)
+		if we want to scale the values to floats, we need a bigger datatype, it would take more memory. If no scaling is necessary, because we can scale later during preprocessing or so, we can
+		proceed with just an int8 datatype array.
+		For example, without scaling, 7 days of data equals around 180MB, with scaling the numpy array equals around 1.5GB
+	"""
+
+	# use int16 as datatype to store the signed integer values, this saves memory when saving the array
+	acc_data_type = np.int16
+	if use_scaling:
+		# use float when we want to store the acceleration data in G, meaning that we the scaling factor to recalculate the signed int into decimal values
+		acc_data_type = np.float
+
+	# create empty array for the acceleration data
+	log_data = np.empty((sample_rate * SIZE , NUM_AXES), dtype=acc_data_type)
+	# empty numpy array to store the timestamps
+	time_data = np.empty((SIZE,1), dtype=np.uint32)
+
+	# open the log.bin file in binary mode
+	with open(log_bin, mode='rb') as file:
+		try:
+			# read the bytes as bits as a large string
+			payload_bits = Bits(bytes = file.read(sample_rate * SIZE)).bin
+
+			# extract 12 bits as 1 acceleration value and add them to a list
+			bits_list = []
+			for i in range(0,len(payload_bits),12):
+				
+				# extract the 12 bit as a string
+				bitstring = payload_bits[i:i+12]
+
+				# convert to 12bit two's complement to signed integer value: also store values in dictionary for faster reading if not already present (the Bits function is not as fast as reading it from a dictionary)
+				if bitstring not in bit12_to_int:
+					# convert 12bit to signed integer
+					acc_value = Bits(bin=bitstring).int
+					# add to dictionary so we can read it faster next time we have the same value
+					bit12_to_int[bitstring] = acc_value
+				else:
+					# bitstring previously already converted to signed int, so we can obtain it from the dictionary
+					acc_value = bit12_to_int[bitstring]
+
+				# add to list 
+				bits_list.append(acc_value)
+
+			# convert list to numpy array and perform scaling if it was set to True: no scaling allows for a smaller numpy array because we can use int8 and not need the float
+			if use_scaling:
+				payload_bits_array = np.array(bits_list).reshape(sample_rate,NUM_AXES) * SCALING
+				print(payload_bits_array.size)
+			else:
+				payload_bits_array = np.array(bits_list).reshape(sample_rate,NUM_AXES)
+				print(payload_bits_array.size)
+
+			# add payload bits array to overall numpy array
+			# np_start = COUNTER * sample_rate
+			# np_end = np_start + sample_rate
+			np_start = 0
+			np_end = sample_rate * SIZE
+			log_data[np_start:np_end] = payload_bits_array
+			
+
+		except Exception as e:
+			logging.error('Unpacking GTX3 exception: {}'.format(e))
+			return None, None
+
+			# return acceleration data + time data
+	
+	return log_data, time_data
