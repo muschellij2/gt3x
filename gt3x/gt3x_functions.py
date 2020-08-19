@@ -188,8 +188,6 @@ def extract_log(log_bin, acceleration_scale, sample_rate, use_scaling = False):
 				6	2	Size	The size of the payload is given in bytes as an little-endian unsigned integer.	Header
 				"""
 				_, payload_type, timestamp, size  = unpack("<cbLH", file.read(8))
-				if payload_type == 0:
-					break
 
 				# acceleration type 0 is the activity data, we skip all other data but can easily be read with an if statement
 				if payload_type == 0:
@@ -398,6 +396,8 @@ def read_gt3x(f, save_location = None, create_time = True):
 	# use old format
 	if 'Acceleration_Scale' not in meta_data :
 		meta_data['Acceleration_Scale'] = 341
+		n_samples = (float(meta_data['Stop_Date']) - float(meta_data['Start_Date']))
+		n_samples = int( n_samples/float(pow(10, 7)) )
 
 	if not os.path.exists(log_bin):
 		log_bin = os.path.join(os.path.dirname(log_bin), "activity.bin")
@@ -416,17 +416,19 @@ def read_gt3x(f, save_location = None, create_time = True):
 	return actigraph_acc, actigraph_time, meta_data
 
 
-def extract_activity(log_bin, acceleration_scale, sample_rate, use_scaling = False):
+def extract_activity(log_bin, n_samples, acceleration_scale, sample_rate, use_scaling = False):
 
 	# define the size of the payload. This is necessary because we need to define the size of the numpy array before we populate it. -1 because we start counting from 0
 	# SIZE = count_payload_size(log_bin) - 1
-	SIZE = count_payload_size(log_bin)
+	# SIZE = count_payload_size(log_bin)
+
 	# raw data values are stored in ints, to obtain values in G, we need to scale them by a factor found in the acceleration_scale parameter within the info.txt file. For example, 256.0
 	SCALING = 1 / acceleration_scale
 	# counter so we can keep track of how many acceleration values we have processed
 	COUNTER = 0
 	# number of axes, the GTX3 is tri-axial, so we hard code it here.
 	NUM_AXES = 3
+	SIZE = int(n_samples * NUM_AXES)
 
 	# empty dictionary where we can store the 12bit to signed integer values; this saves calculating them all the time
 	bit12_to_int = {}
@@ -453,7 +455,7 @@ def extract_activity(log_bin, acceleration_scale, sample_rate, use_scaling = Fal
 	with open(log_bin, mode='rb') as file:
 		try:
 			# read the bytes as bits as a large string
-			payload_bits = Bits(bytes = file.read(sample_rate * SIZE)).bin
+			payload_bits = Bits(bytes = file.read(SIZE)).bin
 
 			# extract 12 bits as 1 acceleration value and add them to a list
 			bits_list = []
@@ -475,19 +477,21 @@ def extract_activity(log_bin, acceleration_scale, sample_rate, use_scaling = Fal
 				# add to list 
 				bits_list.append(acc_value)
 
+			payload_bits_array = np.array(bits_list)
+			sz = payload_bits_array.size
+			logging.error(sz)
 			# convert list to numpy array and perform scaling if it was set to True: no scaling allows for a smaller numpy array because we can use int8 and not need the float
 			if use_scaling:
-				payload_bits_array = np.array(bits_list).reshape(sample_rate,NUM_AXES) * SCALING
-				print(payload_bits_array.size)
+				payload_bits_array = payload_bits_array.reshape(n_samples,NUM_AXES) * SCALING
 			else:
-				payload_bits_array = np.array(bits_list).reshape(sample_rate,NUM_AXES)
-				print(payload_bits_array.size)
+				payload_bits_array = payload_bits_array.reshape(n_samples,NUM_AXES)
 
 			# add payload bits array to overall numpy array
 			# np_start = COUNTER * sample_rate
 			# np_end = np_start + sample_rate
 			np_start = 0
-			np_end = sample_rate * SIZE
+			# np_end = sample_rate * SIZE
+			np_end = n_samples
 			log_data[np_start:np_end] = payload_bits_array
 			
 
@@ -497,4 +501,4 @@ def extract_activity(log_bin, acceleration_scale, sample_rate, use_scaling = Fal
 
 			# return acceleration data + time data
 	
-	return log_data, time_data
+	return log_data
