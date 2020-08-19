@@ -142,7 +142,8 @@ def extract_log(log_bin, acceleration_scale, sample_rate, use_scaling = False):
 	"""
 
 	# define the size of the payload. This is necessary because we need to define the size of the numpy array before we populate it. -1 because we start counting from 0
-	SIZE = count_payload_size(log_bin) - 1
+	# SIZE = count_payload_size(log_bin) - 1
+	SIZE = count_payload_size(log_bin)
 	# raw data values are stored in ints, to obtain values in G, we need to scale them by a factor found in the acceleration_scale parameter within the info.txt file. For example, 256.0
 	SCALING = 1 / acceleration_scale
 	# counter so we can keep track of how many acceleration values we have processed
