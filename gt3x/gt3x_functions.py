@@ -398,5 +398,5 @@ def read_gt3x(f, save_location = None):
 	actigraph_acc = rescale_log_data(log_data = log_data, acceleration_scale = meta_data['Acceleration_Scale'])
 
 	# convert time data to correct time series array with correct miliseconds values
-	actigraph_time = create_time_array(time_data)
+	actigraph_time = create_time_array(time_data, hz = int(meta_data['Sample_Rate']))
 	return actigraph_acc, actigraph_time, meta_data
