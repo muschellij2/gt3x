@@ -1,0 +1,8 @@
+.vscode
+.DS_Store
+*.pyc
+__pycache__
+logs/
+.Rhistory
+.RData
+.Rproj.user
