@@ -6,3 +6,6 @@ logs/
 .Rhistory
 .RData
 .Rproj.user
+pygt3x_*.egg-info*/
+build/
+dist/

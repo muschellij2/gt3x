@@ -1,14 +1,12 @@
 # import functions
-import tempfile as tmp
 
 # import functions
 import gt3x_functions as gt3x 
 
 def read_gt3x(f, save_location = None):
-	save_folder = tmp.TemporaryDirectory()
-	save_folder = save_folder.name
+
 	# unzip .gt3x file and get the file location of the binary log.bin (which contains the raw data) and the info.txt which contains the meta-data
-	log_bin, info_txt = gt3x.unzip_gt3x_file(f = file, save_location = save_folder, delete_source_file = False)
+	log_bin, info_txt = gt3x.unzip_gt3x_file(f = file, save_location = save_location, delete_source_file = False)
 
 	# get meta data from info.txt file
 	meta_data = gt3x.extract_info(info_txt)

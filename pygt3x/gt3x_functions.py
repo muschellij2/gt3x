@@ -9,6 +9,7 @@ import zipfile
 import numpy as np
 from struct import unpack
 from bitstring import Bits
+import tempfile as tmp
 
 
 def unzip_gt3x_file(f, save_location = None, delete_source_file = False):
@@ -35,7 +36,8 @@ def unzip_gt3x_file(f, save_location = None, delete_source_file = False):
 	# if save location is not given, then save in the same folder 
 	# as where the file resides with the folder name equal the name of the file
 	if save_location is None:
-		save_location = os.path.splitext(f)[0]
+		save_folder = tmp.TemporaryDirectory()
+		save_folder = save_folder.name		
 	
 	# if folder does not exist, create it
 	if not os.path.exists(save_location):
