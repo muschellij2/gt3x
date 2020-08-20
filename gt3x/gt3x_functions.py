@@ -394,8 +394,9 @@ def count_payload_size(log_bin, count_payload = 0):
 					# increment counter
 					if (size >= 2):
 						SIZE +=1
-					else:
+					# else:
 						# print("size of the packet is too small - not counting")
+				
 				else:
 					# skip other payload types, we don't need to read it here
 					file.seek(size,1)
