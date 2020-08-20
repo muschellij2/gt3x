@@ -266,23 +266,26 @@ def extract_log(log_bin, acceleration_scale, sample_rate, use_scaling = False, v
 						sample_size = int(sample_rate);
 					
 					if sample_size == 0:
-						bits_list = []
-						for i in range(0,sample_rate):
-							for j in range(0, NUM_AXES): 
-								acc_value = 0
-								# add to list 
-								bits_list.append(acc_value)
+						print("Sample Size of 0")
+					
+					# if sample_size == 0:
+					# 	bits_list = []
+					# 	for i in range(0,sample_rate):
+					# 		for j in range(0, NUM_AXES): 
+					# 			acc_value = 0
+					# 			# add to list 
+					# 			bits_list.append(acc_value)
 
-						# convert list to numpy array and perform scaling if it was set to True: no scaling allows for a smaller numpy array because we can use int8 and not need the float
-						if use_scaling:
-							payload_bits_array = np.array(bits_list).reshape(sample_rate,NUM_AXES) * SCALING
-						else:
-							payload_bits_array = np.array(bits_list).reshape(sample_rate,NUM_AXES)
+					# 	# convert list to numpy array and perform scaling if it was set to True: no scaling allows for a smaller numpy array because we can use int8 and not need the float
+					# 	if use_scaling:
+					# 		payload_bits_array = np.array(bits_list).reshape(sample_rate,NUM_AXES) * SCALING
+					# 	else:
+					# 		payload_bits_array = np.array(bits_list).reshape(sample_rate,NUM_AXES)
 
-						# add payload bits array to overall numpy array
-						np_start = COUNTER * sample_rate
-						np_end = np_start + sample_rate
-						log_data[np_start:np_end] = payload_bits_array							
+					# 	# add payload bits array to overall numpy array
+					# 	np_start = COUNTER * sample_rate
+					# 	np_end = np_start + sample_rate
+					# 	log_data[np_start:np_end] = payload_bits_array						
 
 					if size >= 2:
 
