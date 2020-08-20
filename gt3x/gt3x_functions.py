@@ -267,7 +267,7 @@ def extract_log(log_bin, acceleration_scale, sample_rate, use_scaling = False, v
 					
 					if sample_size == 0:
 						print("Sample Size of 0")
-					
+
 					# if sample_size == 0:
 					# 	bits_list = []
 					# 	for i in range(0,sample_rate):
@@ -392,7 +392,10 @@ def count_payload_size(log_bin, count_payload = 0):
 					# skip the byte content, we don't need to process it here
 					file.seek(size,1)
 					# increment counter
-					SIZE +=1
+					if (size >= 2):
+						SIZE +=1
+					else:
+						# print("size of the packet is too small - not counting")
 				else:
 					# skip other payload types, we don't need to read it here
 					file.seek(size,1)
