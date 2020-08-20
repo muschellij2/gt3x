@@ -171,6 +171,7 @@ def extract_log(log_bin, acceleration_scale, sample_rate, use_scaling = False, v
 
 	# create empty array for the acceleration data
 	log_data = np.empty((sample_rate * SIZE , NUM_AXES), dtype=acc_data_type)
+	log_data[:] = np.NaN
 	# empty numpy array to store the timestamps
 	time_data = np.empty((SIZE,1), dtype=np.uint32)
 
@@ -391,12 +392,14 @@ def count_payload_size(log_bin, count_payload = 0):
 				if payload_type == count_payload:
 					# skip the byte content, we don't need to process it here
 					file.seek(size,1)
+					
 					# increment counter
-					if (size >= 2):
-						SIZE +=1
+					SIZE +=1
+					# if (size >= 2):
+					# 	SIZE +=1
 					# else:
-						# print("size of the packet is too small - not counting")
-				
+					# 	print("size of the packet is too small - not counting")
+
 				else:
 					# skip other payload types, we don't need to read it here
 					file.seek(size,1)
