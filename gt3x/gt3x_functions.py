@@ -266,7 +266,7 @@ def extract_log(log_bin, acceleration_scale, sample_rate, use_scaling = False, v
 					if (sample_size > sample_rate) :
 						sample_size = int(sample_rate);
 					
-					if sample_size == 0 & verbose:
+					if (sample_size == 0) and verbose:
 						print("Sample Size of 0")
 
 					# if sample_size == 0:
