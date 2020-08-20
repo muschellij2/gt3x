@@ -255,20 +255,24 @@ def extract_log(log_bin, acceleration_scale, sample_rate, use_scaling = False, v
 				elif payload_type == 26:
 
 					if verbose: 
-						print("payload 26");						
+						print("payload 26");	
 						print("COUNTER")
 						print(COUNTER)
 						print(size)
 
+					sample_size = int(size / 2 / NUM_AXES)
+
+					if (sample_size > sample_rate) :
+						sample_size = int(sample_rate);
+					
 					if size >= 2:
 
 						bits_list = []
-						ii = 0
-						for i in range(0,size,2):
-							acc_value = unpack("<h", file.read(2))
-							ii = ii + 1
-							# add to list 
-							bits_list.append(acc_value)			
+						for i in range(0,sample_size):
+							for j in range(0, NUM_AXES): 
+								acc_value = unpack("<h", file.read(2))
+								# add to list 
+								bits_list.append(acc_value)			
 
 						# convert list to numpy array and perform scaling if it was set to True: no scaling allows for a smaller numpy array because we can use int8 and not need the float
 						if use_scaling:
@@ -278,16 +282,18 @@ def extract_log(log_bin, acceleration_scale, sample_rate, use_scaling = False, v
 
 						# add payload bits array to overall numpy array
 						np_start = COUNTER * sample_rate
-						np_end = np_start + int(size/6)
+						np_end = np_start + sample_size
 						log_data[np_start:np_end] = payload_bits_array
-					
+					else: 				
+						file.seek(size, 1)	
+				
 					if verbose: 
 						print("Adding counter")
 					# add the time component
 					time_data[COUNTER] = timestamp
 						
 					# increase the counter
-					COUNTER +=1					
+					COUNTER +=1	
 
 				else:
 					# skip whatever is not acceleration data
@@ -308,7 +314,7 @@ def extract_log(log_bin, acceleration_scale, sample_rate, use_scaling = False, v
 					print(file.tell())
 
 				if file.tell() >= file_size:
-					logging.info("Reached end of file!")
+					logging.error("Reached end of file!")
 					break
 
 				_ = unpack("B", file.read(1))
