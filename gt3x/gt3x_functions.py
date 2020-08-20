@@ -110,7 +110,7 @@ def extract_info(info_txt):
 	return info_data
 
 
-def extract_log(log_bin, acceleration_scale, sample_rate, use_scaling = False):
+def extract_log(log_bin, acceleration_scale, sample_rate, use_scaling = False, verbose = False):
 	"""
 	Extract acceleration data from log.bin file that was unzipped from the raw .gt3x file
 	One second of raw activity samples packed into 12-bit values in YXZ order.
@@ -144,6 +144,8 @@ def extract_log(log_bin, acceleration_scale, sample_rate, use_scaling = False):
 	# define the size of the payload. This is necessary because we need to define the size of the numpy array before we populate it. -1 because we start counting from 0
 	# SIZE = count_payload_size(log_bin) - 1
 	SIZE = count_payload_size(log_bin)
+	SIZE = SIZE + count_payload_size(log_bin, count_payload = 26)
+
 	# raw data values are stored in ints, to obtain values in G, we need to scale them by a factor found in the acceleration_scale parameter within the info.txt file. For example, 256.0
 	SCALING = 1 / acceleration_scale
 	# counter so we can keep track of how many acceleration values we have processed
@@ -166,10 +168,15 @@ def extract_log(log_bin, acceleration_scale, sample_rate, use_scaling = False):
 	if use_scaling:
 		# use float when we want to store the acceleration data in G, meaning that we the scaling factor to recalculate the signed int into decimal values
 		acc_data_type = np.float
+
 	# create empty array for the acceleration data
 	log_data = np.empty((sample_rate * SIZE , NUM_AXES), dtype=acc_data_type)
 	# empty numpy array to store the timestamps
 	time_data = np.empty((SIZE,1), dtype=np.uint32)
+
+	file_size = os.path.getsize(log_bin)
+	if verbose:
+		print("file_size = " + str(file_size))
 
 	# open the log.bin file in binary mode
 	with open(log_bin, mode='rb') as file:
@@ -200,6 +207,10 @@ def extract_log(log_bin, acceleration_scale, sample_rate, use_scaling = False):
 						basically the YXZ (3 axis) is 12 bit + 12 bit + 12 bit = 36 bits. When we have 100hz, we have a total of 36 * 100 = 3600 bits. When you look at the size of the payload in bytes, that is for instance 450 bytes, you can
 						see that this is also 450 * 8 = 3600 bits
 					"""
+					if verbose: 
+						print("size");
+						print(size);
+						print("payload 0");
 
 					# read the bytes as bits as a large string
 					payload_bits = Bits(bytes = file.read(size)).bin
@@ -240,10 +251,51 @@ def extract_log(log_bin, acceleration_scale, sample_rate, use_scaling = False):
 					
 					# increase the counter
 					COUNTER +=1
+					# Activity2
+				elif payload_type == 26:
+
+					if verbose: 
+						print("payload 26");						
+						print("COUNTER")
+						print(COUNTER)
+						print(size)
+
+					if size >= 2:
+
+						bits_list = []
+						ii = 0
+						for i in range(0,size,2):
+							acc_value = unpack("<h", file.read(2))
+							ii = ii + 1
+							# add to list 
+							bits_list.append(acc_value)			
+
+						# convert list to numpy array and perform scaling if it was set to True: no scaling allows for a smaller numpy array because we can use int8 and not need the float
+						if use_scaling:
+							payload_bits_array = np.array(bits_list).reshape(sample_rate,NUM_AXES) * SCALING
+						else:
+							payload_bits_array = np.array(bits_list).reshape(sample_rate,NUM_AXES)
+
+						# add payload bits array to overall numpy array
+						np_start = COUNTER * sample_rate
+						np_end = np_start + int(size/6)
+						log_data[np_start:np_end] = payload_bits_array
+					
+					if verbose: 
+						print("Adding counter")
+					# add the time component
+					time_data[COUNTER] = timestamp
+						
+					# increase the counter
+					COUNTER +=1					
 
 				else:
 					# skip whatever is not acceleration data
 					# there are different payload types and can easily be read by adding a different payload_type in this section
+					if verbose: 
+						print("at position " + str(file.tell()))
+						print("seeking size " + str(size))
+
 					file.seek(size, 1)
 
 				"""
@@ -251,6 +303,14 @@ def extract_log(log_bin, acceleration_scale, sample_rate, use_scaling = False):
 
 				TODO: calculate checksum from payload and header and see if it matches the checksum that we read from the last byte
 				"""	
+				if verbose: 
+					print("COUNTER NUMBER " + str(COUNTER))
+					print(file.tell())
+
+				if file.tell() >= file_size:
+					logging.info("Reached end of file!")
+					break
+
 				_ = unpack("B", file.read(1))
 
 				# stop when all records have been read
@@ -258,6 +318,9 @@ def extract_log(log_bin, acceleration_scale, sample_rate, use_scaling = False):
 
 					logging.info('Finished processing activity data')
 					break
+
+
+
 		
 		except Exception as e:
 			logging.error('Unpacking GTX3 exception: {}'.format(e))
@@ -290,18 +353,14 @@ def count_payload_size(log_bin, count_payload = 0):
 	SIZE = 0
 
 	# open the log.bin file in binary mode
-	with open(log_bin, mode='rb') as file:
-		
+	with open(log_bin, mode='rb') as file:	
 		try:
 		# keep reading byte by byte
 			while True:
-
 				# extract header information
 				_, payload_type, _, size  = unpack("<cbLH", file.read(8))
-
 				# count payload 
 				if payload_type == count_payload:
-
 					# skip the byte content, we don't need to process it here
 					file.seek(size,1)
 					# increment counter
@@ -309,12 +368,9 @@ def count_payload_size(log_bin, count_payload = 0):
 				else:
 					# skip other payload types, we don't need to read it here
 					file.seek(size,1)
-
 				# skip the 1-byte checksum value
 				file.seek(1,1)
-	
 		except:
-		
 			logging.info('Counted payload size: {}'.format(SIZE))
 			# return the value
 			return SIZE
@@ -385,7 +441,7 @@ def create_time_array(time_data, hz = 100):
 	return time_data
 
 
-def read_gt3x(f, save_location = None, create_time = True):
+def read_gt3x(f, save_location = None, create_time = True, verbose = False):
 
 	# unzip .gt3x file and get the file location of the binary log.bin (which contains the raw data) and the info.txt which contains the meta-data
 	log_bin, info_txt = unzip_gt3x_file(f = f, save_location = save_location, delete_source_file = False)
@@ -402,11 +458,11 @@ def read_gt3x(f, save_location = None, create_time = True):
 
 	if not os.path.exists(log_bin):
 		log_bin = os.path.join(os.path.dirname(log_bin), "activity.bin")
-		log_data, time_data = extract_activity(log_bin = log_bin, n_samples = n_samples, acceleration_scale = float(meta_data['Acceleration_Scale']), sample_rate = int(meta_data['Sample_Rate']), use_scaling = False)
+		log_data, time_data = extract_activity(log_bin = log_bin, n_samples = n_samples, acceleration_scale = float(meta_data['Acceleration_Scale']), sample_rate = int(meta_data['Sample_Rate']), use_scaling = False, verbose = verbose)
 		old_format=True
 	else :
 		# read raw data from binary data
-		log_data, time_data = extract_log(log_bin = log_bin, acceleration_scale = float(meta_data['Acceleration_Scale']), sample_rate = int(meta_data['Sample_Rate']), use_scaling = False)
+		log_data, time_data = extract_log(log_bin = log_bin, acceleration_scale = float(meta_data['Acceleration_Scale']), sample_rate = int(meta_data['Sample_Rate']), use_scaling = False, verbose = verbose)
 
 	actigraph_acc = rescale_log_data(log_data = log_data, acceleration_scale = meta_data['Acceleration_Scale'])
 
@@ -421,7 +477,7 @@ def read_gt3x(f, save_location = None, create_time = True):
 	return actigraph_acc, actigraph_time, meta_data
 
 
-def extract_activity(log_bin, n_samples, acceleration_scale, sample_rate, use_scaling = False):
+def extract_activity(log_bin, n_samples, acceleration_scale, sample_rate, use_scaling = False, verbose = False):
 
 	# define the size of the payload. This is necessary because we need to define the size of the numpy array before we populate it. -1 because we start counting from 0
 	# SIZE = count_payload_size(log_bin) - 1
