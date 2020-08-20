@@ -288,6 +288,7 @@ def extract_log(log_bin, acceleration_scale, sample_rate, use_scaling = False, v
 					# 	np_end = np_start + sample_rate
 					# 	log_data[np_start:np_end] = payload_bits_array						
 
+					# see https://github.com/actigraph/GT3X-File-Format/blob/master/LogRecords/Activity2.md#activity-log-record-type-with-1-byte-payload
 					if size >= 2:
 
 						bits_list = []
@@ -307,16 +308,16 @@ def extract_log(log_bin, acceleration_scale, sample_rate, use_scaling = False, v
 						np_start = COUNTER * sample_rate
 						np_end = np_start + sample_size
 						log_data[np_start:np_end] = payload_bits_array
+
+						if verbose: 
+							print("Adding counter")
+						# add the time component
+						time_data[COUNTER] = timestamp
+							
+						# increase the counter
+						COUNTER +=1							
 					else: 				
 						file.seek(size, 1)	
-
-					if verbose: 
-						print("Adding counter")
-					# add the time component
-					time_data[COUNTER] = timestamp
-						
-					# increase the counter
-					COUNTER +=1	
 
 				else:
 					# skip whatever is not acceleration data
@@ -394,9 +395,10 @@ def count_payload_size(log_bin, count_payload = 0):
 					file.seek(size,1)
 					
 					# increment counter
-					SIZE +=1
-					# if (size >= 2):
-					# 	SIZE +=1
+					# SIZE +=1
+					# see https://github.com/actigraph/GT3X-File-Format/blob/master/LogRecords/Activity2.md#activity-log-record-type-with-1-byte-payload					
+					if (size >= 2):
+						SIZE +=1
 					# else:
 					# 	print("size of the packet is too small - not counting")
 
