@@ -5,6 +5,7 @@ import numpy as np
 from struct import unpack
 from bitstring import Bits
 import tempfile as tmp
+import math
 
 
 def unzip_gt3x_file(f, save_location = None, delete_source_file = False):
@@ -606,7 +607,7 @@ def extract_activity(log_bin, n_samples, acceleration_scale, sample_rate, use_sc
 			np_end = int(sz/NUM_AXES)
 
 			log_data[np_start:np_end, :] = payload_bits_array	
-			time_data = np.arange(0, floor(n_samples * NUM_AXES / sample_rate))
+			time_data = np.arange(0, math.floor(n_samples * NUM_AXES / sample_rate))
 			time_data = time_data.reshape(time_data.size,1)
 			# time_data = time_data/sample_rate
 			# time_data[0:n_samples] = np.arange(0, n_samples * sample_rate, sample_rate)
