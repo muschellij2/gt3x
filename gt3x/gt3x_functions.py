@@ -493,7 +493,6 @@ def read_gt3x(f, save_location = None, create_time = True, rescale_data = True, 
 		n_samples = (float(meta_data['Stop_Date']) - float(meta_data['Start_Date']))
 		n_samples = int( n_samples/float(pow(10, 6)) )
 
-	meta_data['old_format'] = old_format
 
 	if not os.path.exists(log_bin):
 		log_bin = os.path.join(os.path.dirname(log_bin), "activity.bin")
@@ -503,19 +502,25 @@ def read_gt3x(f, save_location = None, create_time = True, rescale_data = True, 
 		# read raw data from binary data
 		log_data, time_data = extract_log(log_bin = log_bin, acceleration_scale = float(meta_data['Acceleration_Scale']), sample_rate = int(meta_data['Sample_Rate']), use_scaling = False, verbose = verbose)
 
+	meta_data['old_format'] = old_format
+
 	if rescale_data:
 		actigraph_acc = rescale_log_data(log_data = log_data, acceleration_scale = meta_data['Acceleration_Scale'])
 	else :
 		actigraph_acc = log_data
 
+	if old_format: 
+		start_date = int(int(meta_data['Start_Date'])/10000000)
+		start_date = start_date + np.datetime64('0001-01-01T00:00:00').astype(int)
+		time_data = time_data + start_date
+
 	# convert time data to correct time series array with correct miliseconds values
 	if (create_time):
 		if not old_format:
 			actigraph_time = create_time_array(time_data, hz = int(meta_data['Sample_Rate']))
-		else:
-			start_date = int(int(meta_data['Start_Date'])/10000000)
-			start_date = start_date + np.datetime64('0001-01-01T00:00:00').astype(int)
-			actigraph_time = np.asarray(time_data + start_date, dtype='datetime64[s]')
+		else:		
+			actigraph_time = create_time_array(time_data, hz = int(meta_data['Sample_Rate']))
+			# actigraph_time = np.asarray(, dtype='datetime64[s]')
 	else:
 		actigraph_time = time_data;
 	return actigraph_acc, actigraph_time, meta_data
@@ -601,9 +606,9 @@ def extract_activity(log_bin, n_samples, acceleration_scale, sample_rate, use_sc
 			np_end = int(sz/NUM_AXES)
 
 			log_data[np_start:np_end, :] = payload_bits_array	
-			time_data = np.arange(0, n_samples * NUM_AXES)
+			time_data = np.arange(0, floor(n_samples * NUM_AXES / sample_rate))
 			time_data = time_data.reshape(time_data.size,1)
-			time_data = time_data/sample_rate
+			# time_data = time_data/sample_rate
 			# time_data[0:n_samples] = np.arange(0, n_samples * sample_rate, sample_rate)
 
 		except Exception as e:
