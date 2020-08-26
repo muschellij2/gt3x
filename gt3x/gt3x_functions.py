@@ -513,7 +513,7 @@ def read_gt3x(f, save_location = None, create_time = True, rescale_data = True, 
 		else:
 			start_date = int(int(meta_data['Start_Date'])/10000000)
 			start_date = start_date + np.datetime64('0001-01-01T00:00:00').astype(int)
-			actigraph_time = np.asarray(time_data/int(meta_data['Sample_Rate']) + start_date, dtype='datetime64[s]')
+			actigraph_time = np.asarray(time_data + start_date, dtype='datetime64[s]')
 	else:
 		actigraph_time = time_data;
 	return actigraph_acc, actigraph_time, meta_data
@@ -601,6 +601,7 @@ def extract_activity(log_bin, n_samples, acceleration_scale, sample_rate, use_sc
 			log_data[np_start:np_end, :] = payload_bits_array	
 			time_data = np.arange(0, n_samples * NUM_AXES)
 			time_data = time_data.reshape(time_data.size,1)
+			time_data = time_data/sample_rate
 			# time_data[0:n_samples] = np.arange(0, n_samples * sample_rate, sample_rate)
 
 		except Exception as e:
