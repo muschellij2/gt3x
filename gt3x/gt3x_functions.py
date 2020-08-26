@@ -463,8 +463,8 @@ def create_time_array(time_data, hz = 100):
 
 	# check if the sampling frequenzy can fit into equal parts within a 1000ms window
 	if 1000 % hz != 0:
-		logging.error('Sampling frequenzy {} cannot be split into equal parts within a 1s window'.format(hz))
-		exit(1)
+		logging.debug('Sampling frequenzy {} cannot be split into equal parts within a 1s window'.format(hz))
+		# exit(1)
 
 	# calculate the step size of hz in 1s (so 100hz means 100 measurements in 1sec, so if we need to fill 1000ms then we need use a step size of 10)
 	step_size = 1000 / hz
