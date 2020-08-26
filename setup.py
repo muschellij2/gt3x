@@ -4,7 +4,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="gt3x-muschellij2", # Replace with your own username
+    name="gt3x", # Replace with your own username
     version="0.0.2",
     author="Shaheen Syed",
     author_email="shaheen.syed@uit.no",
