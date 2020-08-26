@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="gt3x-muschellij2", # Replace with your own username
-    version="0.0.1",
+    version="0.0.2",
     author="Shaheen Syed",
     author_email="shaheen.syed@uit.no",
     description="A package to read extract raw acceleration data from .gt3x files.",
