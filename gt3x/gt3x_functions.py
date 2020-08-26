@@ -511,7 +511,9 @@ def read_gt3x(f, save_location = None, create_time = True, rescale_data = True, 
 		if not old_format:
 			actigraph_time = create_time_array(time_data, hz = int(meta_data['Sample_Rate']))
 		else:
-			actigraph_time = np.asarray(time_data, dtype='datetime64[s]') + np.asarray(meta_data['Start_Date'], dtype='datetime64[s]')
+			start_date = int(int(meta_data['Start_Date'])/10000000)
+			start_date = start_date + np.datetime64('0001-01-01T00:00:00').astype(int)
+			actigraph_time = np.asarray(time_data + start_date, dtype='datetime64[s]')
 	else:
 		actigraph_time = time_data;
 	return actigraph_acc, actigraph_time, meta_data
