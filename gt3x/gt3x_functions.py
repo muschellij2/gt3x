@@ -517,10 +517,12 @@ def read_gt3x(f, save_location = None, create_time = True, rescale_data = True, 
 
 	# convert time data to correct time series array with correct miliseconds values
 	if (create_time):
-		if not old_format:
-			actigraph_time = create_time_array(time_data, hz = int(meta_data['Sample_Rate']))
-		else:		
-			actigraph_time = create_time_array(time_data, hz = int(meta_data['Sample_Rate']))
+		actigraph_time = create_time_array(time_data, hz = int(meta_data['Sample_Rate']))
+
+		# if not old_format:
+		# 	actigraph_time = create_time_array(time_data, hz = int(meta_data['Sample_Rate']))
+		# else:		
+		# 	actigraph_time = create_time_array(time_data, hz = int(meta_data['Sample_Rate']))
 			# actigraph_time = np.asarray(, dtype='datetime64[s]')
 	else:
 		actigraph_time = time_data;
