@@ -493,6 +493,8 @@ def read_gt3x(f, save_location = None, create_time = True, rescale_data = True, 
 		n_samples = (float(meta_data['Stop_Date']) - float(meta_data['Start_Date']))
 		n_samples = int( n_samples/float(pow(10, 6)) )
 
+	meta_data['old_format'] = old_format
+
 	if not os.path.exists(log_bin):
 		log_bin = os.path.join(os.path.dirname(log_bin), "activity.bin")
 		log_data, time_data = extract_activity(log_bin = log_bin, n_samples = n_samples, acceleration_scale = float(meta_data['Acceleration_Scale']), sample_rate = int(meta_data['Sample_Rate']), use_scaling = False, verbose = verbose)
