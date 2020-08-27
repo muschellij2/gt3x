@@ -31,9 +31,11 @@ def unzip_gt3x_file(f, save_location = None, delete_source_file = False):
 	
 	# if save location is not given, then save in the same folder 
 	# as where the file resides with the folder name equal the name of the file
+	temporary = False
 	if save_location is None:
 		save_location = tmp.TemporaryDirectory()
-		save_location = save_location.name		
+		save_location = save_location.name
+		temporary = True	
 	
 	# if folder does not exist, create it
 	if not os.path.exists(save_location):
@@ -64,7 +66,7 @@ def unzip_gt3x_file(f, save_location = None, delete_source_file = False):
 	info_txt = os.path.join(save_location, 'info.txt')
 	
 	# return location of the files
-	return log_bin, info_txt
+	return log_bin, info_txt, temporary, save_location
 
 
 def extract_info(info_txt):
@@ -482,7 +484,7 @@ def create_time_array(time_data, hz = 100):
 def read_gt3x(f, save_location = None, create_time = True, rescale_data = True, verbose = False):
 
 	# unzip .gt3x file and get the file location of the binary log.bin (which contains the raw data) and the info.txt which contains the meta-data
-	log_bin, info_txt = unzip_gt3x_file(f = f, save_location = save_location, delete_source_file = False)
+	log_bin, info_txt, temporary, save_location = unzip_gt3x_file(f = f, save_location = save_location, delete_source_file = False)
 
 	# get meta data from info.txt file
 	meta_data = extract_info(info_txt)
@@ -526,6 +528,10 @@ def read_gt3x(f, save_location = None, create_time = True, rescale_data = True, 
 			# actigraph_time = np.asarray(, dtype='datetime64[s]')
 	else:
 		actigraph_time = time_data;
+
+	if temporary: 
+		shutil.rmtree(save_location, ignore_errors=True)		
+
 	return actigraph_acc, actigraph_time, meta_data
 
 
