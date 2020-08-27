@@ -10,7 +10,7 @@ The script gt3x_functions.py contains code to extract raw acceleration data from
 The `gt3x` module needs to be first installed.  The most up-to-date one is:
 
 ```bash
-pip install git+https://github.com/muschellij2/gt3x.git#egg=gt3x
+pip install --upgrade git+https://github.com/muschellij2/gt3x.git#egg=gt3x
 ````
 
 But can also be installed via `pip` from [PyPi](https://pypi.org/project/gt3x/):
