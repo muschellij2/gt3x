@@ -6,6 +6,7 @@ from struct import unpack
 from bitstring import Bits
 import tempfile as tmp
 import math
+import shutil
 
 
 def unzip_gt3x_file(f, save_location = None, delete_source_file = False):
