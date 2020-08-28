@@ -626,5 +626,8 @@ def extract_activity(log_bin, n_samples, acceleration_scale, sample_rate, use_sc
 			return None, None
 
 			# return acceleration data + time data
-	
+	# https://github.com/actigraph/NHANES-GT3X-File-Format/blob/master/fileformats/activity.bin.md
+	# it's Y, X, Z so need to switch up
+	log_data[:,[0, 1]] = log_data[:,[1, 0]]
+
 	return log_data, time_data
