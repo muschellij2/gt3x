@@ -614,6 +614,10 @@ def extract_activity(log_bin, n_samples, acceleration_scale, sample_rate, use_sc
 				print("max list = " + str(np.max(payload_bits_array)))
 
 			sz = payload_bits_array.size
+			if verbose:
+				logging.info("payload_bits size = " + str(sz))
+				print("payload_bits size = " + str(sz))
+			
 			# convert list to numpy array and perform scaling if it was set to True: no scaling allows for a smaller numpy array because we can use int8 and not need the float
 			if use_scaling:
 				payload_bits_array = payload_bits_array.reshape(int(sz/NUM_AXES),NUM_AXES) * SCALING
