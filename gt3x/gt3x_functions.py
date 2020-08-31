@@ -493,7 +493,7 @@ def read_gt3x(f, save_location = None, create_time = True, rescale_data = True, 
 	old_format = False
 	# use old format
 	if 'Acceleration_Scale' not in meta_data :
-		meta_data['Acceleration_Scale'] = 341
+		meta_data['Acceleration_Scale'] = 341.
 		n_samples = (float(meta_data['Stop_Date']) - float(meta_data['Start_Date']))
 		n_samples = int( n_samples/float(pow(10, 6)) )
 
@@ -550,6 +550,8 @@ def extract_activity(log_bin, n_samples, acceleration_scale, sample_rate, use_sc
 	NUM_AXES = 3
 	# SIZE = int(n_samples * NUM_AXES)
 	SIZE = os.path.getsize(log_bin)
+	if verbose:
+		print("file_size = " + str(SIZE))
 
 	# empty dictionary where we can store the 12bit to signed integer values; this saves calculating them all the time
 	bit12_to_int = {}
@@ -628,6 +630,9 @@ def extract_activity(log_bin, n_samples, acceleration_scale, sample_rate, use_sc
 			# return acceleration data + time data
 	# https://github.com/actigraph/NHANES-GT3X-File-Format/blob/master/fileformats/activity.bin.md
 	# it's Y, X, Z so need to switch up
+	if verbose:
+		print("reordering to X Y Z")
+
 	log_data[:,[0, 1]] = log_data[:,[1, 0]]
 
 	return log_data, time_data
