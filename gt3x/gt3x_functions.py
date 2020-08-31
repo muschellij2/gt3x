@@ -509,7 +509,7 @@ def read_gt3x(f, save_location = None, create_time = True, rescale_data = True, 
 	meta_data['old_format'] = old_format
 
 	if rescale_data:
-		actigraph_acc = rescale_log_data(log_data = log_data, acceleration_scale = meta_data['Acceleration_Scale'])
+		actigraph_acc = rescale_log_data(log_data = log_data, acceleration_scale = float(meta_data['Acceleration_Scale']))
 	else :
 		actigraph_acc = log_data
 
