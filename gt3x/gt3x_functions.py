@@ -610,6 +610,7 @@ def extract_activity(log_bin, n_samples, acceleration_scale, sample_rate, use_sc
 			payload_bits_array = np.array(bits_list)
 			if verbose:
 				logging.info("max list = " + str(np.max(payload_bits_array)))				
+				logging.info("max scaled = " + str(np.max(payload_bits_array) * SCALING))
 				print("max list = " + str(np.max(payload_bits_array)))
 
 			sz = payload_bits_array.size
