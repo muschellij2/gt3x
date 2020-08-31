@@ -550,11 +550,12 @@ def extract_activity(log_bin, n_samples, acceleration_scale, sample_rate, use_sc
 	NUM_AXES = 3
 	# SIZE = int(n_samples * NUM_AXES)
 	SIZE = os.path.getsize(log_bin)
-	est_n_samples = SIZE * 8/36
-	
+	est_n_samples = SIZE * 8. / 36.
+
 	if verbose:
 		logging.info("file_size = " + str(SIZE))
 		print("estimated sample size = " + str(est_n_samples))
+		print("estimated sample size (int) = " + str(int(est_n_samples)))
 		print("passed sample size = " + str(n_samples))
 		print("file_size = " + str(SIZE))
 
