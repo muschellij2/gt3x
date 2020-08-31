@@ -551,6 +551,7 @@ def extract_activity(log_bin, n_samples, acceleration_scale, sample_rate, use_sc
 	# SIZE = int(n_samples * NUM_AXES)
 	SIZE = os.path.getsize(log_bin)
 	if verbose:
+		logging.info("file_size = " + str(SIZE))
 		print("file_size = " + str(SIZE))
 
 	# empty dictionary where we can store the 12bit to signed integer values; this saves calculating them all the time
@@ -581,8 +582,9 @@ def extract_activity(log_bin, n_samples, acceleration_scale, sample_rate, use_sc
 			# read the bytes as bits as a large string
 			payload_bits = Bits(bytes = file.read(SIZE*2)).bin
 			if verbose:
+				logging.info("payload_bits = " + str(len(payload_bits)))
 				print("payload_bits = " + str(len(payload_bits)))
-			
+
 			# logging.error(len(payload_bits))
 
 			# extract 12 bits as 1 acceleration value and add them to a list
@@ -606,6 +608,10 @@ def extract_activity(log_bin, n_samples, acceleration_scale, sample_rate, use_sc
 				bits_list.append(acc_value)
 
 			payload_bits_array = np.array(bits_list)
+			if verbose:
+				logging.info("max list = " + str(np.max(payload_bits_array)))				
+				print("max list = " + str(np.max(payload_bits_array)))
+
 			sz = payload_bits_array.size
 			# convert list to numpy array and perform scaling if it was set to True: no scaling allows for a smaller numpy array because we can use int8 and not need the float
 			if use_scaling:
@@ -629,6 +635,7 @@ def extract_activity(log_bin, n_samples, acceleration_scale, sample_rate, use_sc
 		except Exception as e:
 			logging.error('Unpacking GTX3 exception: {}'.format(e))
 			return None, None
+
 
 			# return acceleration data + time data
 	# https://github.com/actigraph/NHANES-GT3X-File-Format/blob/master/fileformats/activity.bin.md
