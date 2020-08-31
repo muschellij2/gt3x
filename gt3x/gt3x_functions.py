@@ -226,6 +226,16 @@ def extract_log(log_bin, acceleration_scale, sample_rate, use_scaling = False, v
 						
 						# extract the 12 bit as a string
 						bitstring = payload_bits[i:i+12]
+						# at the very end, need to make sure 12 
+						if (i + 12) > len(payload_bits):
+							print("i is outside payload bits = " + str(i + 12))
+							print("bitstring " + str(bitstring))
+						if (len(bitstring) < 12): 
+							x=['0']* ((i + 12) - len(payload_bits))
+							x= "".join(x)
+							bitstring = bitstring + x
+							print("bitstring " + str(bitstring))
+
 
 						# convert to 12bit two's complement to signed integer value: also store values in dictionary for faster reading if not already present (the Bits function is not as fast as reading it from a dictionary)
 						if bitstring not in bit12_to_int:
