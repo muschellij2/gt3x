@@ -580,6 +580,9 @@ def extract_activity(log_bin, n_samples, acceleration_scale, sample_rate, use_sc
 		try:
 			# read the bytes as bits as a large string
 			payload_bits = Bits(bytes = file.read(SIZE*2)).bin
+			if verbose:
+				print("payload_bits = " + str(len(payload_bits)))
+			
 			# logging.error(len(payload_bits))
 
 			# extract 12 bits as 1 acceleration value and add them to a list
