@@ -492,7 +492,7 @@ def create_time_array(time_data, hz = 100):
 	return time_data
 
 
-def read_gt3x(f, save_location = None, create_time = True, rescale_data = True, verbose = False):
+def read_gt3x(f, save_location = None, create_time = True, rescale_data = True, verbose = False, trim = True):
 
 	# unzip .gt3x file and get the file location of the binary log.bin (which contains the raw data) and the info.txt which contains the meta-data
 	log_bin, info_txt, temporary, save_location = unzip_gt3x_file(f = f, save_location = save_location, delete_source_file = False)
@@ -510,8 +510,9 @@ def read_gt3x(f, save_location = None, create_time = True, rescale_data = True, 
 
 	if not os.path.exists(log_bin):
 		log_bin = os.path.join(os.path.dirname(log_bin), "activity.bin")
-		log_data, time_data = extract_activity(log_bin = log_bin, n_samples = n_samples, acceleration_scale = float(meta_data['Acceleration_Scale']), sample_rate = int(meta_data['Sample_Rate']), use_scaling = False, verbose = verbose)
+		log_data, time_data, est_n_samples = extract_activity(log_bin = log_bin, n_samples = n_samples, acceleration_scale = float(meta_data['Acceleration_Scale']), sample_rate = int(meta_data['Sample_Rate']), use_scaling = False, verbose = verbose)
 		old_format=True
+		meta_data['est_n_samples'] = est_n_samples
 	else :
 		# read raw data from binary data
 		log_data, time_data = extract_log(log_bin = log_bin, acceleration_scale = float(meta_data['Acceleration_Scale']), sample_rate = int(meta_data['Sample_Rate']), use_scaling = False, verbose = verbose)
@@ -532,6 +533,11 @@ def read_gt3x(f, save_location = None, create_time = True, rescale_data = True, 
 	if (create_time):
 		actigraph_time = create_time_array(time_data, hz = int(meta_data['Sample_Rate']))
 
+		if old_format :
+			if trim: 
+				actigraph_time = actigraph_time[range(0, est_n_samples), :]
+				actigraph_acc = actigraph_acc[range(0, est_n_samples), :]
+			
 		# if not old_format:
 		# 	actigraph_time = create_time_array(time_data, hz = int(meta_data['Sample_Rate']))
 		# else:		
@@ -659,8 +665,8 @@ def extract_activity(log_bin, n_samples, acceleration_scale, sample_rate, use_sc
 			np_end = int(sz/NUM_AXES)
 
 			log_data[np_start:np_end, :] = payload_bits_array	
-			# time_data = np.arange(0, math.floor(n_samples * NUM_AXES / sample_rate))
-			time_data = np.arange(0, est_n_samples)
+			time_data = np.arange(0, math.floor(n_samples * NUM_AXES / sample_rate))
+			# time_data = np.arange(0, est_n_samples)
 			time_data = time_data.reshape(time_data.size,1)
 			# time_data = time_data/sample_rate
 			# time_data[0:n_samples] = np.arange(0, n_samples * sample_rate, sample_rate)
@@ -677,7 +683,7 @@ def extract_activity(log_bin, n_samples, acceleration_scale, sample_rate, use_sc
 		print("reordering to X Y Z")
 
 	log_data[:,[0, 1]] = log_data[:,[1, 0]]
-	log_data = log_data[range(0, est_n_samples), :]
+	# log_data = log_data[range(0, est_n_samples), :]
 
 
-	return log_data, time_data
+	return log_data, time_data, est_n_samples
