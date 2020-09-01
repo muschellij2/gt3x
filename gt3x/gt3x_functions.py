@@ -659,7 +659,8 @@ def extract_activity(log_bin, n_samples, acceleration_scale, sample_rate, use_sc
 			np_end = int(sz/NUM_AXES)
 
 			log_data[np_start:np_end, :] = payload_bits_array	
-			time_data = np.arange(0, math.floor(n_samples * NUM_AXES / sample_rate))
+			# time_data = np.arange(0, math.floor(n_samples * NUM_AXES / sample_rate))
+			time_data = np.arange(0, est_n_samples)
 			time_data = time_data.reshape(time_data.size,1)
 			# time_data = time_data/sample_rate
 			# time_data[0:n_samples] = np.arange(0, n_samples * sample_rate, sample_rate)
@@ -677,7 +678,6 @@ def extract_activity(log_bin, n_samples, acceleration_scale, sample_rate, use_sc
 
 	log_data[:,[0, 1]] = log_data[:,[1, 0]]
 	log_data = log_data[range(0, est_n_samples), :]
-	time_data = time_data[range(0, est_n_samples), :]
 
 
 	return log_data, time_data
