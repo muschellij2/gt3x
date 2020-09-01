@@ -560,7 +560,7 @@ def extract_activity(log_bin, n_samples, acceleration_scale, sample_rate, use_sc
 	NUM_AXES = 3
 	# SIZE = int(n_samples * NUM_AXES)
 	SIZE = os.path.getsize(log_bin)
-	est_n_samples = SIZE * 8. / 36.
+	est_n_samples =  math.floor(SIZE * 8. / 36.)
 
 	if verbose:
 		logging.info("file_size = " + str(SIZE))
@@ -629,8 +629,6 @@ def extract_activity(log_bin, n_samples, acceleration_scale, sample_rate, use_sc
 					# bitstring previously already converted to signed int, so we can obtain it from the dictionary
 					acc_value = bit12_to_int[bitstring]
 				if (i + 12) > len(payload_bits):
-					print("i is outside payload bits = " + str(i + 12))
-					print("bitstring " + str(bitstring))
 					print("acc_value " + str(acc_value))
 
 				# add to list 
@@ -678,5 +676,7 @@ def extract_activity(log_bin, n_samples, acceleration_scale, sample_rate, use_sc
 		print("reordering to X Y Z")
 
 	log_data[:,[0, 1]] = log_data[:,[1, 0]]
+	log_data = log_data[range(0, est_n_samples), ]
+
 
 	return log_data, time_data
