@@ -159,6 +159,8 @@ def extract_log(log_bin, acceleration_scale, sample_rate, use_scaling = False, v
 
 	# empty dictionary where we can store the 12bit to signed integer values; this saves calculating them all the time
 	bit12_to_int = {}
+	have_activity = False
+	have_activity2 = False
 
 	"""
 		create empty numpy array where we can store the acceleration data to: dimensions (sample_rate x SIZE,number of axis)
@@ -203,6 +205,7 @@ def extract_log(log_bin, acceleration_scale, sample_rate, use_scaling = False, v
 
 				# acceleration type 0 is the activity data, we skip all other data but can easily be read with an if statement
 				if payload_type == 0:
+					have_activity = True
 
 					"""
 						This is the actual data that varies based on the record *Type* field. It's size is provided in the *Size* field. Please refer to the appropriate section for the record type for the indiviual payload formats.
@@ -268,6 +271,7 @@ def extract_log(log_bin, acceleration_scale, sample_rate, use_scaling = False, v
 					COUNTER +=1
 					# Activity2
 				elif payload_type == 26:
+					have_activity2 = True
 
 					if verbose: 
 						print("payload 26");	
@@ -369,6 +373,15 @@ def extract_log(log_bin, acceleration_scale, sample_rate, use_scaling = False, v
 		except Exception as e:
 			logging.error('Unpacking GTX3 exception: {}'.format(e))
 			return None, None
+
+		if have_activity and have_activity2:
+			msg = "Warning: ACTIVITY and ACTIVITY2 Packets found!"
+			logging.info(msg)
+			print(msg)
+
+		if have_activity and not have_activity2:
+			# make XYZ because ACTIVITY packets are YXZ
+			log_data[:,[0, 1]] = log_data[:,[1, 0]]	
 
 		# return acceleration data + time data
 		return log_data, time_data
@@ -475,9 +488,9 @@ def create_time_array(time_data, hz = 100):
 		numpy array with correct number of time series (so now the sampling frequency is added within the original data which only contained seconds and not miliseconds)
 	"""
 
-	# check if the sampling frequenzy can fit into equal parts within a 1000ms window
+	# check if the sampling frequency can fit into equal parts within a 1000ms window
 	if 1000 % hz != 0:
-		logging.debug('Sampling frequenzy {} cannot be split into equal parts within a 1s window'.format(hz))
+		logging.debug('Sampling frequency {} cannot be split into equal parts within a 1s window'.format(hz))
 		# exit(1)
 
 	# calculate the step size of hz in 1s (so 100hz means 100 measurements in 1sec, so if we need to fill 1000ms then we need use a step size of 10)
