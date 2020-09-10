@@ -7,6 +7,9 @@ from bitstring import Bits
 import tempfile as tmp
 import math
 import shutil
+import warnings
+
+
 
 
 def unzip_gt3x_file(f, save_location = None, delete_source_file = False):
@@ -517,26 +520,30 @@ def read_gt3x(f, save_location = None, create_time = True, rescale_data = True, 
 	# use old format
 	if 'Acceleration_Scale' not in meta_data :
 		meta_data['Acceleration_Scale'] = 341.
-		if int(meta_data['Stop_Date']) == 0 :
-			if 'Last_Sample_Time' in meta_data :
-				meta_data['Stop_Date'] = meta['Last_Sample_Time'];
-			elif 'Download_Date' in meta_data :
-				meta_data['Stop_Date'] = meta_data['Download_Date'];
-		n_samples = (float(meta_data['Stop_Date']) - float(meta_data['Start_Date']))
-		if n_samples <= 0 :
-			rate = int(meta_data['Sample_Rate'])
-			n_samples = 100 * 24 * 60 * 60 * rate
-			msg = "Negative samples estimated, dates are wrong in info, using " + \
-			"maximum samples (100 days)"
-			logging.info(msg)
-			print(msg)		    
-		else : 
-			n_samples = int( n_samples/float(pow(10, 6)) )
+
+	if int(meta_data['Stop_Date']) == 0 :
+		if 'Last_Sample_Time' in meta_data :
+			meta_data['Stop_Date'] = meta['Last_Sample_Time'];
+		elif 'Download_Date' in meta_data :
+			meta_data['Stop_Date'] = meta_data['Download_Date'];
+	n_samples = (float(meta_data['Stop_Date']) - float(meta_data['Start_Date']))
+	if n_samples <= 0 :
+		rate = int(meta_data['Sample_Rate'])
+		n_samples = 100 * 24 * 60 * 60 * rate
+		msg = "Negative samples estimated, dates are wrong in info, using " + \
+		"maximum samples (100 days)"
+		logging.info(msg)
+		print(msg)
+	else : 
+		n_samples = int( n_samples/float(pow(10, 6)) )
 
 
 	if not os.path.exists(log_bin):
 		log_bin = os.path.join(os.path.dirname(log_bin), "activity.bin")
 		log_data, time_data, est_n_samples = extract_activity(log_bin = log_bin, n_samples = n_samples, acceleration_scale = float(meta_data['Acceleration_Scale']), sample_rate = int(meta_data['Sample_Rate']), use_scaling = False, verbose = verbose)
+		prefix = meta_data['Serial_Number'][:3].upper()
+		if prefix != "NEO" and prefix != "MRA":
+			warnings.warn("Prefix is " + prefix + ", not NEO/MRA but old format")
 		old_format=True
 		meta_data['est_n_samples'] = est_n_samples
 	else :
@@ -601,6 +608,7 @@ def extract_activity(log_bin, n_samples, acceleration_scale, sample_rate, use_sc
 		print("passed sample size = " + str(n_samples))
 		print("file_size = " + str(SIZE))
 
+	n_samples = max(est_n_samples, n_samples * NUM_AXES)
 
 	# empty dictionary where we can store the 12bit to signed integer values; this saves calculating them all the time
 	bit12_to_int = {}
@@ -673,15 +681,43 @@ def extract_activity(log_bin, n_samples, acceleration_scale, sample_rate, use_sc
 				print("max list = " + str(np.max(payload_bits_array)))
 
 			sz = payload_bits_array.size
+			reshape_size = int(sz/NUM_AXES)*NUM_AXES
+			extra_rows = sz - reshape_size
+			if (extra_rows > 0) and (extra_rows < NUM_AXES):
+				msg = "There are " + str(sz) + " rows of the data"
+				msg = msg + " but only " + str(reshape_size) 
+				msg = msg + " can be reshaped - removing " 
+				msg = msg + str(extra_rows) + " elements"
+				logging.info(msg)
+				print(msg)
+				warnings.warn(msg)
+				payload_bits_array = np.array(bits_list[:reshape_size])
+				sz = payload_bits_array.size
+				# msg = "updated payload_bits array size = " + str(sz)
+				# logging.info(msg)
+				# print(msg)
+				# msg = "payload_bits array shape = " + str(payload_bits_array.shape)
+				# logging.info(msg)
+				# print(msg)	
 			if verbose:
 				logging.info("payload_bits array size = " + str(sz))
 				print("payload_bits array size = " + str(sz))
-			
+				msg = "payload_bits array size = " + str(payload_bits_array.shape)
+				logging.info(msg)
+				print(msg)
+				logging.info("reshape size = " + str(reshape_size))
+				print("reshape size = " + str(reshape_size))							
+
 			# convert list to numpy array and perform scaling if it was set to True: no scaling allows for a smaller numpy array because we can use int8 and not need the float
+			if verbose:
+				msg = "reshaping to " + str(int(sz/NUM_AXES)) + " x " + str(NUM_AXES)
+				logging.info(msg)
+				print(msg)
+
 			if use_scaling:
-				payload_bits_array = payload_bits_array.reshape(int(sz/NUM_AXES),NUM_AXES) * SCALING
+				payload_bits_array = payload_bits_array.reshape((int(sz/NUM_AXES),NUM_AXES)) * SCALING
 			else:
-				payload_bits_array = payload_bits_array.reshape(int(sz/NUM_AXES),NUM_AXES)
+				payload_bits_array = payload_bits_array.reshape((int(sz/NUM_AXES),NUM_AXES))
 
 			# add payload bits array to overall numpy array
 			# np_start = COUNTER * sample_rate
@@ -689,6 +725,11 @@ def extract_activity(log_bin, n_samples, acceleration_scale, sample_rate, use_sc
 			np_start = 0
 			# np_end = sample_rate * SIZE
 			np_end = int(sz/NUM_AXES)
+
+			if verbose:
+				msg = "putting data in log_data, shape: " + str(log_data.shape)
+				logging.info(msg)
+				print(msg)
 
 			log_data[np_start:np_end, :] = payload_bits_array	
 			time_data = np.arange(0, math.floor(n_samples * NUM_AXES / sample_rate))
