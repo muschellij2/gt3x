@@ -367,8 +367,10 @@ def extract_log(log_bin, acceleration_scale, sample_rate, use_scaling = False, v
 
 				# stop when all records have been read
 				if COUNTER == SIZE:
-
-					logging.info('Finished processing activity data')
+					msg = 'Finished processing activity data'
+					logging.info(msg)
+					if (verbose) :
+						print(msg)
 					break
 
 
