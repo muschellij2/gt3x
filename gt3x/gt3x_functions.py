@@ -187,6 +187,7 @@ def extract_log(log_bin, acceleration_scale, sample_rate, use_scaling = False, v
 	file_size = os.path.getsize(log_bin)
 	if verbose:
 		print("file_size = " + str(file_size))
+		print("Number of payload counts = " + str(SIZE))
 
 	# open the log.bin file in binary mode
 	with open(log_bin, mode='rb') as file:
@@ -276,7 +277,7 @@ def extract_log(log_bin, acceleration_scale, sample_rate, use_scaling = False, v
 				elif payload_type == 26:
 					have_activity2 = True
 
-					if verbose: 
+					if verbose > 1: 
 						print("payload 26");	
 						print("COUNTER")
 						print(COUNTER)
@@ -287,7 +288,7 @@ def extract_log(log_bin, acceleration_scale, sample_rate, use_scaling = False, v
 					if (sample_size > sample_rate) :
 						sample_size = int(sample_rate);
 					
-					if (sample_size == 0) and verbose:
+					if (sample_size == 0) and verbose > 1:
 						print("Sample Size of 0")
 
 					# if sample_size == 0:
@@ -330,7 +331,7 @@ def extract_log(log_bin, acceleration_scale, sample_rate, use_scaling = False, v
 						np_end = np_start + sample_size
 						log_data[np_start:np_end] = payload_bits_array
 
-						if verbose: 
+						if verbose > 1: 
 							print("Adding counter")
 						# add the time component
 						time_data[COUNTER] = timestamp
@@ -343,7 +344,7 @@ def extract_log(log_bin, acceleration_scale, sample_rate, use_scaling = False, v
 				else:
 					# skip whatever is not acceleration data
 					# there are different payload types and can easily be read by adding a different payload_type in this section
-					if verbose: 
+					if verbose > 1: 
 						print("at position " + str(file.tell()))
 						print("seeking size " + str(size))
 
