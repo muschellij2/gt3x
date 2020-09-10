@@ -674,8 +674,8 @@ def extract_activity(log_bin, n_samples, acceleration_scale, sample_rate, use_sc
 
 			sz = payload_bits_array.size
 			if verbose:
-				logging.info("payload_bits size = " + str(sz))
-				print("payload_bits size = " + str(sz))
+				logging.info("payload_bits array size = " + str(sz))
+				print("payload_bits array size = " + str(sz))
 			
 			# convert list to numpy array and perform scaling if it was set to True: no scaling allows for a smaller numpy array because we can use int8 and not need the float
 			if use_scaling:
