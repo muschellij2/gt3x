@@ -219,7 +219,7 @@ def extract_log(log_bin, acceleration_scale, sample_rate, use_scaling = False, v
 						basically the YXZ (3 axis) is 12 bit + 12 bit + 12 bit = 36 bits. When we have 100hz, we have a total of 36 * 100 = 3600 bits. When you look at the size of the payload in bytes, that is for instance 450 bytes, you can
 						see that this is also 450 * 8 = 3600 bits
 					"""
-					if verbose: 
+					if verbose > 1: 
 						print("size");
 						print(size);
 						print("payload 0");
