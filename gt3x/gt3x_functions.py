@@ -517,8 +517,21 @@ def read_gt3x(f, save_location = None, create_time = True, rescale_data = True, 
 	# use old format
 	if 'Acceleration_Scale' not in meta_data :
 		meta_data['Acceleration_Scale'] = 341.
+		if int(meta_data['Stop_Date']) == 0 :
+			if 'Last_Sample_Time' in meta_data :
+				meta_data['Stop_Date'] = meta['Last_Sample_Time'];
+			elif 'Download_Date' in meta_data :
+				meta_data['Stop_Date'] = meta['Download_Date'];
 		n_samples = (float(meta_data['Stop_Date']) - float(meta_data['Start_Date']))
-		n_samples = int( n_samples/float(pow(10, 6)) )
+		if n_samples <= 0 :
+			rate = int(meta_data['Sample_Rate'])
+			n_samples = 100 * 24 * 60 * 60 * rate
+			msg = "Negative samples estimated, dates are wrong in info, using " + \
+			"maximum samples (100 days)"
+			logging.info(msg)
+			print(msg)		    
+		else : 
+			n_samples = int( n_samples/float(pow(10, 6)) )
 
 
 	if not os.path.exists(log_bin):

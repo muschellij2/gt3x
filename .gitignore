@@ -9,3 +9,4 @@ logs/
 pygt3x_*.egg-info*/
 build/
 dist/
+blah.py
