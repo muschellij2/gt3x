@@ -524,12 +524,17 @@ def read_gt3x(f, save_location = None, create_time = True, rescale_data = True, 
 	if 'Acceleration_Scale' not in meta_data :
 		meta_data['Acceleration_Scale'] = 341.
 
-	if int(meta_data['Stop_Date']) == 0 :
-		if 'Last_Sample_Time' in meta_data :
-			meta_data['Stop_Date'] = meta['Last_Sample_Time'];
+	stop_date = 0.
+	if 'Last_Sample_Time' in meta_data :
+		stop_date = float(meta_data['Last_Sample_Time'])
+
+	if stop_date == 0. :
+		if 'Stop_Date' in meta_data :
+			stop_date = float(meta_data['Stop_Date'])
 		elif 'Download_Date' in meta_data :
-			meta_data['Stop_Date'] = meta_data['Download_Date'];
-	n_samples = (float(meta_data['Stop_Date']) - float(meta_data['Start_Date']))
+			stop_date = float(meta_data['Download_Date']);
+
+	n_samples = stop_date - float(meta_data['Start_Date'])
 	if n_samples <= 0 :
 		rate = int(meta_data['Sample_Rate'])
 		n_samples = 100 * 24 * 60 * 60 * rate
