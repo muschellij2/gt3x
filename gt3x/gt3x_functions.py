@@ -355,7 +355,7 @@ def extract_log(log_bin, acceleration_scale, sample_rate, use_scaling = False, v
 
 				TODO: calculate checksum from payload and header and see if it matches the checksum that we read from the last byte
 				"""	
-				if verbose: 
+				if verbose > 1: 
 					print("COUNTER NUMBER " + str(COUNTER))
 					print(file.tell())
 
