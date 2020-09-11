@@ -47,6 +47,7 @@ def unzip_gt3x_file(f, save_location = None, delete_source_file = False):
 
 	# check if file already exists
 	if not os.path.exists(os.path.join(save_location, 'log.bin')) and not os.path.exists(os.path.join(save_location, 'info.txt')):
+		f = os.path.expanduser(f)
 
 		try:
 			# unzip the file
