@@ -11,7 +11,7 @@ setuptools.setup(
     description="A package to read extract raw acceleration data from .gt3x files.",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/shaheen-syed/gt3x",
+    url="https://github.com/muschellij2/gt3x",
     packages=setuptools.find_packages(exclude = "tests"),  # Required
     classifiers=[
         "Programming Language :: Python :: 3",
