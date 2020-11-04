@@ -129,8 +129,8 @@ def extract_log(log_bin, acceleration_scale, sample_rate, use_scaling = False, v
 		location of the log.bin file on disk
 	acceleration_scale : float
 		Scale the resultant by the scale factor (this gives us an acceleration value in g's). 
-		Device serial numbers starting with NEO and CLE use a scale factor of 341 LSB/g (±6g). 
-		MOS devices use a 256 LSB/g scale factor (±8g). If a LOG_PARAMETER record is preset, 
+		Device serial numbers starting with NEO and CLE use a scale factor of 341 LSB/g (+/-6g). 
+		MOS devices use a 256 LSB/g scale factor (+/-8g). If a LOG_PARAMETER record is preset, 
 		then the ACCEL_SCALE value should be used.
 	sample_rate : int
 		sample rate, i.e. the number of Hz (how many values we obtain per second)
