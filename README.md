@@ -1,3 +1,8 @@
+# PLEASE SEE
+Actigraph has released its pygt3x package at https://github.com/actigraph/pygt3x.  This is likely going to be better maintained than this repo and will likely update with different changes to GT3X format.
+
+
+
 # Read Raw GT3X file
 An implementation of extract raw acceleration data from .gt3x files.
 
